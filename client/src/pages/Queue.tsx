@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { QueueItem } from "@shared/schema";
+import { QueueItem, statusOrder } from "@shared/schema";
 
 export default function Queue() {
   const { data: items = [], isLoading } = useQuery<QueueItem[]>({
@@ -17,8 +17,18 @@ export default function Queue() {
   });
 
   const sortedItems = [...items].sort((a, b) => {
+    // 1순위: 우선(priority) 정렬
     if (a.priority !== b.priority) return b.priority ? 1 : -1;
+
+    // 2순위: 진행(progress) 정렬
     if (a.progress !== b.progress) return b.progress ? 1 : -1;
+
+    // 3순위: 상태(status) 정렬
+    if (statusOrder[a.status] !== statusOrder[b.status]) {
+      return statusOrder[a.status] - statusOrder[b.status];
+    }
+
+    // 마지막으로 수정 시간 기준 정렬
     return new Date(b.lastEditedTime).getTime() - new Date(a.lastEditedTime).getTime();
   });
 
