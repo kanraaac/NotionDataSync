@@ -6,10 +6,10 @@ import { z } from "zod";
 import { statusValues } from "@shared/schema";
 
 const notion = new Client({
-  auth: process.env.NOTION_API_KEY || "default_key"
+  auth: "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"
 });
 
-const DATABASE_ID = process.env.NOTION_DATABASE_ID || "default_db_id";
+const DATABASE_ID = "90c9f695b9d34c32bed816a02dc81a4d";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get all queue items
@@ -19,18 +19,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         database_id: DATABASE_ID,
       });
 
-      const items = response.results.map(result => ({
-        pageId: result.id,
-        chair: result.properties.체어.title?.[0]?.plain_text || "",
-        status: result.properties.상태.select?.name || "-",
-        priority: result.properties.우선.checkbox || false,
-        progress: result.properties.진행.checkbox || false,
-        waiting: result.properties.지난.formula.string || "-",
-        lastEditedTime: result.last_edited_time
-      }));
+      const items = response.results.map(result => {
+        const properties = (result as any).properties;
+        return {
+          pageId: result.id,
+          chair: properties.체어.title?.[0]?.plain_text || "",
+          status: properties.상태.select?.name || "-",
+          priority: properties.우선.checkbox || false,
+          progress: properties.진행.checkbox || false,
+          waiting: properties.지난.formula.string || "-",
+          lastEditedTime: result.last_edited_time
+        };
+      });
 
       res.json(items);
     } catch (error) {
+      console.error('Error fetching from Notion:', error);
       res.status(500).json({ error: "Failed to fetch queue data" });
     }
   });
