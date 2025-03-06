@@ -27,16 +27,16 @@ export default function Queue() {
   }
 
   return (
-    <Card className="fixed bottom-24 right-4 w-[600px] overflow-hidden">
-      <div className="max-h-[400px] overflow-auto">
+    <Card className="fixed top-0 left-0 w-[640px] h-[480px] rounded-none">
+      <div className="h-full overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px] text-center">체어</TableHead>
-              <TableHead className="w-[150px] text-center">상태</TableHead>
-              <TableHead className="w-[80px] text-center">우선</TableHead>
-              <TableHead className="w-[80px] text-center">진행</TableHead>
-              <TableHead className="w-[150px]">대기</TableHead>
+              <TableHead className="w-[100px] text-center sticky top-0">체어</TableHead>
+              <TableHead className="w-[150px] text-center sticky top-0">상태</TableHead>
+              <TableHead className="w-[80px] text-center sticky top-0">우선</TableHead>
+              <TableHead className="w-[80px] text-center sticky top-0">진행</TableHead>
+              <TableHead className="w-[150px] sticky top-0">대기</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
