@@ -1,0 +1,350 @@
+import tkinter as tk
+from tkinter import ttk
+from notion_client import Client
+import pandas as pd
+import requests
+
+# Notion API 키와 데이터베이스 ID 설정
+NOTION_API_KEY = "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"
+db_id = "90c9f695b9d34c32bed816a02dc81a4d"  # 여기에 정확한 db_id 값을 넣어주세요.
+
+# Notion 클라이언트 객체 만들기
+notion = Client(auth=NOTION_API_KEY)
+
+# 상태 우선순위 설정
+status_order = {'긴급': 1, '우선1': 2, '우선2': 3, '예약신환': 4, '예약': 5, '신환': 6, '응급': 7, '대기': 8, '-': 9}
+
+# 데이터베이스에서 데이터 가져오기 함수
+def get_notion_data(database_id):
+    global df  # 전역 변수로 설정
+    try:
+        response = notion.databases.query(database_id=database_id, timeout=10)
+        
+        rows = []
+        for result in response['results']:
+            title = result['properties']['체어']['title'][0]['plain_text'] if result['properties']['체어']['title'] else ''
+            status = result['properties']['상태']['select']['name'] if result['properties']['상태']['select'] else ''
+            우선 = result['properties']['우선']['checkbox']
+            진행 = result['properties']['진행']['checkbox']
+            지난 = result['properties']['지난']['formula']['string']
+            last_edited_time = result['last_edited_time']
+            page_id = result['id']  # 페이지 ID
+
+            rows.append([title, status, 우선, 진행, 지난, last_edited_time, page_id])
+
+        df = pd.DataFrame(rows, columns=['체어', '상태', '우선', '진행', '대기', 'Last Edited', 'Page ID'])
+
+        df['Priority Order'] = df['상태'].map(status_order)
+        df['Priority Check'] = df['우선'] == True
+        df['Progress Check'] = df['진행'] == True
+
+        df = df.sort_values(by=['Priority Check', 'Progress Check', 'Priority Order', 'Last Edited'], ascending=[False, False, True, True])
+        df = df.drop(columns=['Priority Check', 'Priority Order', 'Progress Check'])
+
+        df['우선'] = df['우선'].replace({True: 'O', False: 'X'})
+        df['진행'] = df['진행'].replace({True: 'O', False: 'X'})
+
+        return df
+    except Exception as e:
+        print(f"Error loading data: {e}")
+        return pd.DataFrame()
+
+# 상태 업데이트 함수
+def update_status(page_id, new_status):
+    url = f"https://api.notion.com/v1/pages/{page_id}"
+    headers = {
+        "Authorization": f"Bearer {NOTION_API_KEY}",
+        "Content-Type": "application/json",
+        "Notion-Version": "2021-05-13"
+    }
+    
+    data = {
+        "properties": {
+            "상태": {
+                "select": {
+                    "name": new_status
+                }
+            }
+        }
+    }
+    
+    response = requests.patch(url, headers=headers, json=data)
+    if response.status_code == 200:
+        print(f"Successfully updated status to {new_status} for {page_id}")
+    else:
+        print(f"Failed to update status: {response.text}")
+
+# 우선 업데이트 함수
+def update_priority(page_id, new_priority):
+    url = f"https://api.notion.com/v1/pages/{page_id}"
+    headers = {
+        "Authorization": f"Bearer {NOTION_API_KEY}",
+        "Content-Type": "application/json",
+        "Notion-Version": "2021-05-13"
+    }
+
+    data = {
+        "properties": {
+            "우선": {
+                "checkbox": new_priority
+            }
+        }
+    }
+
+    response = requests.patch(url, headers=headers, json=data)
+    if response.status_code == 200:
+        print(f"Successfully updated priority to {new_priority} for {page_id}")
+    else:
+        print(f"Failed to update priority: {response.text}")
+
+# 진행 업데이트 함수
+def update_progress(page_id, new_progress):
+    url = f"https://api.notion.com/v1/pages/{page_id}"
+    headers = {
+        "Authorization": f"Bearer {NOTION_API_KEY}",
+        "Content-Type": "application/json",
+        "Notion-Version": "2021-05-13"
+    }
+
+    data = {
+        "properties": {
+            "진행": {
+                "checkbox": new_progress
+            }
+        }
+    }
+
+    response = requests.patch(url, headers=headers, json=data)
+    if response.status_code == 200:
+        print(f"Successfully updated progress to {new_progress} for {page_id}")
+    else:
+        print(f"Failed to update progress: {response.text}")
+
+# 대기열 클릭 시 상태, 우선, 진행 열을 업데이트하는 함수
+def update_waiting_status(page_id):
+    # 상태를 '-'로 업데이트
+ #   update_status(page_id, '-')
+    # 우선 열을 False로 업데이트
+#    update_priority(page_id, False)
+    # 진행 열을 False로 업데이트
+ #   update_progress(page_id, False)
+
+    # 추가: 대기열 클릭 시 HTTP POST 요청 보내기
+    url = f"https://api.notion.com/v1/pages/{page_id}"
+    headers = {
+        "Authorization": f"Bearer {NOTION_API_KEY}",
+        "Content-Type": "application/json",
+        "Notion-Version": "2021-05-13"
+    }
+    
+    data = {
+        "properties": {
+            "상태": {"select": {"name": "-"}},
+            "우선": {"checkbox": False},
+            "진행": {"checkbox": False}
+        }
+    }
+
+    response = requests.patch(url, headers=headers, json=data)
+    if response.status_code == 200:
+        print(f"Successfully updated for {page_id}")
+    else:
+        print(f"Failed to update progress: {response.text}")
+
+# 상태 업데이트 함수
+def on_status_click(event, tree):
+    global df
+    item = tree.identify_row(event.y)
+    column = tree.identify_column(event.x)
+
+    if item and column == '#2':  # 상태 열 클릭 시
+        col_num = int(column[1:]) - 1
+        selected_value = tree.item(item)['values'][col_num]
+        page_id = tree.item(item)['values'][-1]
+
+        combobox = ttk.Combobox(tree, values=['긴급', '우선1', '우선2', '예약신환', '예약', '신환', '응급', '대기', '-'], height=9)
+        combobox.set(selected_value)
+
+        x, y, width, height = tree.bbox(item, column=column)
+        combobox.place(x=x, y=y, width=width, height=height)
+        # Open the dropdown list immediately
+        combobox.event_generate('<Button-1>')
+
+        
+        def on_combobox_select(event, combobox, page_id, tree, item):
+            new_status = combobox.get()
+            update_status(page_id, new_status)
+
+            for open_combobox in tree.winfo_children():
+                if isinstance(open_combobox, ttk.Combobox):
+                    open_combobox.destroy()
+
+            if item in tree.get_children():
+                tree.item(item, values=[tree.item(item)['values'][0], new_status] + tree.item(item)['values'][2:])
+            
+            combobox.destroy()
+
+        combobox.bind("<<ComboboxSelected>>", lambda event, combobox=combobox, page_id=page_id, tree=tree, item=item: on_combobox_select(event, combobox, page_id, tree, item))
+
+# 우선 열을 클릭할 때 o, x를 반전시켜 업데이트하는 함수
+def on_priority_click(event, tree):
+    item = tree.identify_row(event.y)
+    column = tree.identify_column(event.x)
+
+    if item and column == '#3':
+        col_num = int(column[1:]) - 1
+        current_value = tree.item(item)['values'][col_num]
+        new_value = 'O' if current_value == 'X' else 'X'
+
+        page_id = tree.item(item)['values'][-1]
+        new_priority = not (current_value == 'O')
+
+        update_priority(page_id, new_priority)
+        destroy_all_comboboxes(tree)
+        tree.item(item, values=[tree.item(item)['values'][0], tree.item(item)['values'][1], new_value] + tree.item(item)['values'][3:])
+
+# 진행 열을 클릭할 때 o, x를 반전시켜 업데이트하는 함수
+def on_progress_click(event, tree):
+    item = tree.identify_row(event.y)
+    column = tree.identify_column(event.x)
+
+    if item and column == '#4':
+        col_num = int(column[1:]) - 1
+        current_value = tree.item(item)['values'][col_num]
+        new_value = 'O' if current_value == 'X' else 'X'
+
+        page_id = tree.item(item)['values'][-1]
+        new_progress = not (current_value == 'O')
+
+        update_progress(page_id, new_progress)
+        destroy_all_comboboxes(tree)
+        tree.item(item, values=[tree.item(item)['values'][0], tree.item(item)['values'][1], tree.item(item)['values'][2], new_value] + tree.item(item)['values'][4:])
+
+# 대기열 클릭 시 처리 함수
+def on_waiting_click(event, tree):
+    item = tree.identify_row(event.y)
+    column = tree.identify_column(event.x)
+
+    if item and column == '#5':
+        page_id = tree.item(item)['values'][-1]
+        update_waiting_status(page_id)
+        destroy_all_comboboxes(tree)
+        tree.item(item, values=[tree.item(item)['values'][0], tree.item(item)['values'][1], 'X', 'X', '-'] + tree.item(item)['values'][5:])
+
+# 콤보박스를 제거하는 함수
+def destroy_all_comboboxes(tree):
+    for open_combobox in tree.winfo_children():
+        if isinstance(open_combobox, ttk.Combobox):
+            open_combobox.destroy()
+            
+# 클릭 이벤트 처리
+def on_click(event, tree):
+    on_status_click(event, tree)
+    on_priority_click(event, tree)
+    on_progress_click(event, tree)
+    on_waiting_click(event, tree)
+    
+# 창 상태 확인 및 최소화 복구 함수
+def check_and_restore_window(root, window_x, window_y):
+    if root.wm_state() == 'iconic':  # 창이 최소화되어 있는지 확인
+        root.wm_state('normal')  # 창을 원래 상태로 복구
+        root.geometry(f"+{window_x}+{window_y}")  # 원래 위치로 이동
+        root.attributes('-topmost', True)  # 창을 최상위로 활성화하지 않음
+
+# 30초마다 창 상태 확인 및 복구하는 함수
+def periodically_check_and_restore_window(root, window_x, window_y):
+    check_and_restore_window(root, window_x, window_y)
+    root.after(30000, periodically_check_and_restore_window, root, window_x, window_y)
+
+
+# 트리뷰 업데이트 함수
+def update_treeview(tree, df):
+    for item in tree.get_children():
+        tree.delete(item)
+    for index, row in df.iterrows():
+        tree.insert("", tk.END, values=list(row))
+
+# 데이터를 창에 표시하는 함수
+def display_data_in_window(df):
+    global tree
+    root = tk.Tk()
+    root.title("순서")  # 창 이름을 "진료순서"로 설정
+
+    root.overrideredirect(False)
+    root.attributes("-topmost", True)
+    root.attributes("-alpha", 1)
+
+     # 기본 해상도를 기준으로 비율을 계산하여 창 크기 및 텍스트 크기 설정
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    
+    base_width = 2560
+    base_height = 1600
+    
+    width_ratio = screen_width / base_width
+    height_ratio = screen_height / base_height
+
+    # 창 크기 비율 조정
+    window_width = int(200 * width_ratio * 1.6)
+    window_height = int(170 * height_ratio* 1.65)
+
+    root.geometry(f"{window_width}x{window_height}")
+    root.resizable(False, False)
+
+
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    x_pos = screen_width - window_width
+    y_pos = screen_height - int( window_height * 1.43)
+    root.geometry(f"{window_width}x{window_height}+{x_pos}+{y_pos}")
+
+    tree = ttk.Treeview(root, columns=list(df.columns), show="headings")
+
+    for col in df.columns:
+        tree.heading(col, text=col)
+        
+        if col == '체어':
+            tree.column(col, width=int(window_width * 30/190), stretch=tk.NO,anchor='center')
+        elif col == '상태':
+            tree.column(col, width=int(window_width * 60/190), stretch=tk.NO,anchor='center')
+        elif col in ['우선', '진행']:
+            tree.column(col, width=int(window_width * 30/190), stretch=tk.NO,anchor='center')
+        else:
+            tree.heading(col, text=col, anchor='w')  # '대기' 헤더는 왼쪽 정렬
+            tree.column(col, width=int(window_width * 60/190), stretch=tk.NO,)
+
+    for index, row in df.iterrows():
+        tree.insert("", tk.END, values=list(row))
+
+    tree.bind("<ButtonRelease-1>", lambda event: on_click(event, tree))
+
+    scrollbar = ttk.Scrollbar(root, orient=tk.VERTICAL, command=tree.yview)
+    tree.configure(yscroll=scrollbar.set)
+
+    tree.grid(row=0, column=0, sticky='nsew')
+    scrollbar.grid_forget()
+
+    root.grid_columnconfigure(0, weight=0, minsize=50)
+    root.grid_rowconfigure(0, weight=0, minsize=50)
+
+    def update_data():
+        try:
+            df = get_notion_data(db_id)
+            update_treeview(tree, df)
+        except Exception as e:
+            print(f"Error refreshing data: {e}")
+
+        root.after(5000, update_data)
+
+    update_data()
+
+    # 30초초마다 창 상태 확인 및 복구
+    periodically_check_and_restore_window(root, x_pos, y_pos)
+
+    root.mainloop()
+
+# 메인 함수 실행
+if __name__ == "__main__":
+    df = get_notion_data(db_id)
+    display_data_in_window(df)
