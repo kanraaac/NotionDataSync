@@ -28,6 +28,11 @@ export default function Queue() {
       return statusOrder[a.status] - statusOrder[b.status];
     }
 
+    // 4순위: 대기 시간 정렬 (숫자만 추출하여 비교)
+    const waitingA = parseInt(a.waiting.replace(/\D/g, '') || '0');
+    const waitingB = parseInt(b.waiting.replace(/\D/g, '') || '0');
+    if (waitingA !== waitingB) return waitingB - waitingA;
+
     // 마지막으로 수정 시간 기준 정렬
     return new Date(b.lastEditedTime).getTime() - new Date(a.lastEditedTime).getTime();
   });
