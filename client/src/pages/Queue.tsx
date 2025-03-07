@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { QueueItem, statusOrder } from "@shared/schema";
+import { QueueItem, statusOrder, type StatusType } from "@shared/schema";
 
 export default function Queue() {
   const { data: items = [], isLoading } = useQuery<QueueItem[]>({
@@ -24,8 +24,10 @@ export default function Queue() {
     if (a.progress !== b.progress) return b.progress ? 1 : -1;
 
     // 3순위: 상태(status) 정렬
-    if (statusOrder[a.status] !== statusOrder[b.status]) {
-      return statusOrder[a.status] - statusOrder[b.status];
+    const statusA = a.status as StatusType;
+    const statusB = b.status as StatusType;
+    if (statusOrder[statusA] !== statusOrder[statusB]) {
+      return statusOrder[statusA] - statusOrder[statusB];
     }
 
     // 4순위: 대기 시간 정렬 (숫자만 추출하여 비교)
