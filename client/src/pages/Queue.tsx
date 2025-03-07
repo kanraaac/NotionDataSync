@@ -45,7 +45,7 @@ export default function Queue() {
     <Card className="fixed top-0 left-0 w-[320px] h-[240px] rounded-none">
       <div className="h-full overflow-auto">
         <Table className="border-spacing-0 border-separate">
-          <TableHeader className="leading-none">
+          <TableHeader className="leading-[5px]">
             <TableRow className="text-[14px]">
               <TableHead className="w-[20px] text-center p-[1px] sticky top-0 h-[25px]">체어</TableHead>
               <TableHead className="w-[20px] text-center p-[1px] sticky top-0 h-[25px]">우선</TableHead>
