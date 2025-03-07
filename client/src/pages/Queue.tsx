@@ -57,7 +57,7 @@ export default function Queue() {
           <TableBody>
             {sortedItems.map((item) => (
               <TableRow key={item.pageId} className="text-[14px]">
-                <TableCell className="text-center p-[2px]">{item.chair}</TableCell>
+                <TableCell className="text-center p-[2px] font-bold">{item.chair}</TableCell>
                 <TableCell className="text-center p-[2px]">{item.priority ? 'O' : 'X'}</TableCell>
                 <TableCell className="text-center p-[2px]">{item.progress ? 'O' : 'X'}</TableCell>
                 <TableCell className="text-center p-[2px]">{item.status}</TableCell>
