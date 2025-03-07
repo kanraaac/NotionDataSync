@@ -47,11 +47,11 @@ export default function Queue() {
         <Table className="border-spacing-0 border-separate">
           <TableHeader className="leading-none">
             <TableRow className="text-[14px]">
-              <TableHead className="w-[22px] text-center p-[1px] sticky top-0 h-[18px]">체어</TableHead>
-              <TableHead className="w-[22px] text-center p-[1px] sticky top-0 h-[18px]">우선</TableHead>
-              <TableHead className="w-[22px] text-center p-[1px] sticky top-0 h-[18px]">진행</TableHead>
-              <TableHead className="w-[58px] text-center p-[1px] sticky top-0 h-[18px]">상태</TableHead>
-              <TableHead className="w-[58px] p-[1px] sticky top-0 h-[18px]">대기</TableHead>
+              <TableHead className="w-[20px] text-center p-[1px] sticky top-0 h-[25px]">체어</TableHead>
+              <TableHead className="w-[20px] text-center p-[1px] sticky top-0 h-[25px]">우선</TableHead>
+              <TableHead className="w-[20px] text-center p-[1px] sticky top-0 h-[25px]">진행</TableHead>
+              <TableHead className="w-[55px] text-center p-[1px] sticky top-0 h-[25px]">상태</TableHead>
+              <TableHead className="w-[55px] p-[1px] sticky top-0 h-[25px]">대기</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
