@@ -46,17 +46,17 @@ export default function Queue() {
       <div className="h-full overflow-auto">
         <Table className="border-spacing-0 border-separate">
           <TableHeader>
-            <TableRow className="text-[12px]">
-              <TableHead className="w-[25px] text-center p-[2px] sticky top-0">체어</TableHead>
-              <TableHead className="w-[25px] text-center p-[2px] sticky top-0">우선</TableHead>
-              <TableHead className="w-[25px] text-center p-[2px] sticky top-0">진행</TableHead>
+            <TableRow className="text-[14px]">
+              <TableHead className="w-[23px] text-center p-[2px] sticky top-0">체어</TableHead>
+              <TableHead className="w-[23px] text-center p-[2px] sticky top-0">우선</TableHead>
+              <TableHead className="w-[23px] text-center p-[2px] sticky top-0">진행</TableHead>
               <TableHead className="w-[58px] text-center p-[2px] sticky top-0">상태</TableHead>
               <TableHead className="w-[58px] p-[2px] sticky top-0">대기</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedItems.map((item) => (
-              <TableRow key={item.pageId} className="text-[12px]">
+              <TableRow key={item.pageId} className="text-[14px]">
                 <TableCell className="text-center p-[2px]">{item.chair}</TableCell>
                 <TableCell className="text-center p-[2px]">{item.priority ? 'O' : 'X'}</TableCell>
                 <TableCell className="text-center p-[2px]">{item.progress ? 'O' : 'X'}</TableCell>
