@@ -45,13 +45,13 @@ export default function Queue() {
     <Card className="fixed top-0 left-0 w-[320px] h-[240px] rounded-none">
       <div className="h-full overflow-auto">
         <Table className="border-spacing-0 border-separate">
-          <TableHeader>
+          <TableHeader className="leading-none">
             <TableRow className="text-[14px]">
-              <TableHead className="w-[23px] text-center p-[2px] sticky top-0">체어</TableHead>
-              <TableHead className="w-[23px] text-center p-[2px] sticky top-0">우선</TableHead>
-              <TableHead className="w-[23px] text-center p-[2px] sticky top-0">진행</TableHead>
-              <TableHead className="w-[58px] text-center p-[2px] sticky top-0">상태</TableHead>
-              <TableHead className="w-[58px] p-[2px] sticky top-0">대기</TableHead>
+              <TableHead className="w-[22px] text-center p-[1px] sticky top-0 h-[18px]">체어</TableHead>
+              <TableHead className="w-[22px] text-center p-[1px] sticky top-0 h-[18px]">우선</TableHead>
+              <TableHead className="w-[22px] text-center p-[1px] sticky top-0 h-[18px]">진행</TableHead>
+              <TableHead className="w-[58px] text-center p-[1px] sticky top-0 h-[18px]">상태</TableHead>
+              <TableHead className="w-[58px] p-[1px] sticky top-0 h-[18px]">대기</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
